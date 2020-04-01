@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.client.RestTemplate;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -16,6 +18,11 @@ public class RestWebService {
 
 	private static final Logger log = LoggerFactory.getLogger(RestWebService.class);
 
+  	@ResponseStatus(value=HttpStatus.BAD_REQUEST, reason="Error")  
+  	@ExceptionHandler(Exception.class)
+  	public void error() {
+  	}
+
 	PersonRepository personRepository;
 	CarRepository carRepository;
 
@@ -23,7 +30,7 @@ public class RestWebService {
 	public RestWebService(PersonRepository personRepository, CarRepository carRepository) {
 		super();
 		this.personRepository = personRepository;
-		this.carRepository = carRepository;
+		this.carRepository = carRepository;	
 	}
 	
 	@GetMapping("/persons")
@@ -46,11 +53,15 @@ public class RestWebService {
 		carRepository.save(car);
 	}
 
-	@PutMapping("/vehicules/{plateNumber}/{personName")
+	@PutMapping("/vehicules/{plateNumber}")
 	public void rent(@PathVariable("plateNumber") String plateNumber,
-					 @PathVariable("personName") String personName,
-					 @RequestBody Dates dates) throws Exception{
-		
+		@RequestParam(value = "personName", required = true) String personName,
+		@RequestBody Dates dates) throws Exception{
+
+		System.out.println(plateNumber);
+		System.out.println(personName);
+			System.out.println(dates);
+
 		List<Car> cars = carRepository.findByPlateNumber(plateNumber);
 		Car car = cars.get(0);
 
@@ -78,6 +89,14 @@ public class RestWebService {
 
 		personRepository.save(person);
 
+	}
+	
+	@GetMapping("/frontendURL")
+	public String message(){
+		RestTemplate restTemplate = new RestTemplate();
+		String uri = "http://localhost:8181/backendURL";
+    		String result = restTemplate.getForObject(uri, String.class);
+		return "Message from the front end while the backend is called: " + result;
 	}
 
 }
